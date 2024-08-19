@@ -187,7 +187,7 @@ public class CommandCsrefund implements TabExecutor {
                     Lang.sendMessage(owner, ownerMessage);
                 }
 
-                logToNotifier(merchant, client, player, typeRef, price, type, quantity);
+                logToNotifier(merchant, player, typeRef, price, type, quantity);
 
                 return true;
             }
@@ -249,7 +249,7 @@ public class CommandCsrefund implements TabExecutor {
                 }
 
                 // Log to CSNotifier
-                logToNotifier(merchant, client, player, typeRef, price, type, quantity);
+                logToNotifier(merchant, player, typeRef, price, type, quantity);
 
                 return true;
             }
@@ -362,16 +362,16 @@ public class CommandCsrefund implements TabExecutor {
         return econ.getBalance(player) >= amount.doubleValue();
     }
 
-    public void logToNotifier(UUID merchant, UUID client, Player player, ItemStack item, BigDecimal price, TransactionType type, int quantity) {
+    public void logToNotifier(UUID merchantId, Player client, ItemStack item, BigDecimal price, TransactionType type, int quantity) {
         ChestShopNotifier csn = ChestShopRefund.csn;
         if (csn == null) return;
 
         Queue<HistoryEntry> batch = csn.getBatch();
         boolean startRunner = batch.isEmpty();
         HistoryEntry entry = new HistoryEntry(
-                merchant,
-                client,
-                player.getName(),
+                merchantId,
+                client.getUniqueId(),
+                client.getName(),
                 ItemUtil.getName(item),
                 -price.doubleValue(),
                 Time.getEpochTime(),
