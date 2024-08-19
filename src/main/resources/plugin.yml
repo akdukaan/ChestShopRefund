@@ -1,0 +1,25 @@
+name: ChestShopRefund
+version: '${project.version}'
+main: com.birdflop.chestshoprefund.ChestShopRefund
+api-version: '1.18'
+depend:
+  - ChestShop
+softdepend:
+  - ChestShopNotifier
+commands:
+  csrefund:
+    description: chestshoprefund commands
+    permission: chestshoprefund.command
+    usage: /<command>
+permissions:
+  chestshoprefund.command:
+    description: Use /csrefund
+  chestshoprefund.command.refund:
+    description: Ability to refund chestshop transactions
+    children:
+      chestshoprefund.command: true
+    default: true
+  chestshoprefund.command.reload:
+    description: Reload the plugin
+    children:
+      chestshoprefund.command: true
