@@ -26,7 +26,13 @@ public final class ChestShopRefund extends JavaPlugin {
         plugin = this;
         Plugin chestShopNotifier = Bukkit.getPluginManager().getPlugin("ChestShopNotifier");
         if (chestShopNotifier instanceof ChestShopNotifier) {
-            csn = (ChestShopNotifier) chestShopNotifier;
+            try {
+                Class.forName("com.wfector.notifier.HistoryEntry");
+                csn = (ChestShopNotifier) chestShopNotifier;
+            } catch (ClassNotFoundException ignored) {
+                Bukkit.getLogger().log(Level.WARNING, "Your version of ChestShopNotifier needs to be updated before ChestShopRefund can integrate with it.");
+                Bukkit.getLogger().log(Level.WARNING, "You can update at https://ci.minebench.de/job/ChestShopNotifier/");
+            }
         }
         getServer().getPluginManager().registerEvents(new ListenerTransaction(), this);
         getCommand("csrefund").setExecutor(new CommandCsrefund());

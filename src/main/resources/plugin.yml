@@ -8,7 +8,7 @@ softdepend:
   - ChestShopNotifier
 commands:
   csrefund:
-    description: chestshoprefund commands
+    description: all chestshoprefund commands
     permission: chestshoprefund.command
     usage: /<command>
 permissions:
@@ -21,5 +21,9 @@ permissions:
     default: true
   chestshoprefund.command.reload:
     description: Reload the plugin
+    children:
+      chestshoprefund.command: true
+  chestshoprefund.command.debug:
+    description: Use debug command
     children:
       chestshoprefund.command: true
