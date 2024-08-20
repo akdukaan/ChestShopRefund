@@ -1,5 +1,6 @@
 package com.birdflop.chestshoprefund;
 
+import com.Acrobot.ChestShop.Configuration.Messages;
 import com.google.common.base.Throwables;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
@@ -16,26 +17,30 @@ import java.util.logging.Level;
 public class Lang {
     private static YamlConfiguration config;
 
-    public static String COMMAND_NO_PERMISSION = "<red>You do not have permission for that command.";
-    public static String NOT_REFUNDABLE = "<red>This transaction could not be refunded.";
-    public static String COMMAND_PLAYERS_ONLY = "<red>That command can only be used by players.";
-    public static String RELOAD_SUCCESS = "<gold>Plugin reloaded!";
-    public static String YOU_UNBOUGHT = "You sold back {item} to {player} for {price}.";
-    public static String YOU_UNSOLD = "You bought back {item} from {player} for {price}.";
-    public static String SOMEONE_UNBOUGHT = "{player} sold back {item} for {price}.";
-    public static String SOMEONE_UNSOLD = "{player} bought back {item} for {price}.";
-    public static String CLICK_TO_UNDO = "<gray>Click here to undo.";
+    // Not configurable
     public static String DEBUG_ENABLED = "<green>Debug enabled.";
     public static String DEBUG_DISABLED = "<green>Debug disabled.";
+    public static String COMMAND_PLAYERS_ONLY = "<red>That command can only be used by players.";
+    public static String RELOAD_SUCCESS = "<gold>Plugin reloaded!";
+
+    // Configurable
+    public static String CLICK_TO_UNDO = "<green>[Shop] <gray>Click here to undo.";
+    public static String YOU_UNBOUGHT = "<green>[Shop] <white>You sold back {item} to {player} for {price}.";
+    public static String YOU_UNSOLD = "<green>[Shop] <white>You bought back {item} from {player} for {price}.";
+    public static String SOMEONE_UNBOUGHT = "<green>[Shop] <white>{player} sold back {item} for {price}.";
+    public static String SOMEONE_UNSOLD = "<green>[Shop] <white>{player} bought back {item} for {price}.";
+    public static String NOT_REFUNDABLE = "<green>[Shop] <white>That transaction has already been refunded.";
 
     private static void init() {
-        COMMAND_NO_PERMISSION = getString("command-no-permission", COMMAND_NO_PERMISSION);
+        CLICK_TO_UNDO = getString("click-to-undo", CLICK_TO_UNDO);
+        YOU_UNBOUGHT = getString("you-unbought", YOU_UNBOUGHT);
+        YOU_UNSOLD = getString("you-unsold", YOU_UNSOLD);
+        SOMEONE_UNBOUGHT = getString("someone-unbought", SOMEONE_UNBOUGHT);
+        SOMEONE_UNSOLD = getString("someone-unsold", SOMEONE_UNSOLD);
         NOT_REFUNDABLE = getString("not-refundable", NOT_REFUNDABLE);
-        COMMAND_PLAYERS_ONLY = getString("command-players-only", COMMAND_PLAYERS_ONLY);
-        RELOAD_SUCCESS = getString("reload-success", RELOAD_SUCCESS);
     }
 
-    // ############################  DO NOT EDIT BELOW THIS LINE  ############################
+    // ######################################################################################
 
     /**
      * Reload the language file
@@ -76,6 +81,7 @@ public class Lang {
     public static void sendMessage(@NotNull CommandSender recipient, String message) {
         Component component = MiniMessage.miniMessage().deserialize(message);
         recipient.sendMessage(component);
+        Messages.
     }
 
     public static void debug(@NotNull CommandSender recipient, String message) {

@@ -1,5 +1,6 @@
 package com.birdflop.chestshoprefund;
 
+import com.Acrobot.ChestShop.Configuration.Messages;
 import com.Acrobot.ChestShop.Database.Account;
 import com.Acrobot.ChestShop.Events.TransactionEvent;
 import com.Acrobot.ChestShop.Events.TransactionEvent.TransactionType;
@@ -38,13 +39,13 @@ public class CommandCsrefund implements TabExecutor {
     @Override
     public boolean onCommand(@NotNull CommandSender commandSender, @NotNull Command command, @NotNull String string, @NotNull String[] args) {
         if (!commandSender.hasPermission("chestshoprefund.command")) {
-            Lang.sendMessage(commandSender, Lang.COMMAND_NO_PERMISSION);
+            Messages.NO_PERMISSION.sendWithPrefix(commandSender);
             return true;
         }
         if (args.length == 0) return false;
         if (args[0].equalsIgnoreCase("reload")) {
             if (!commandSender.hasPermission("chestshoprefund.command.reload")) {
-                Lang.sendMessage(commandSender, Lang.COMMAND_NO_PERMISSION);
+                Messages.NO_PERMISSION.sendWithPrefix(commandSender);
                 return true;
             }
             Lang.reload();
@@ -54,7 +55,7 @@ public class CommandCsrefund implements TabExecutor {
 
         if (args[0].equalsIgnoreCase("debug")) {
             if (!commandSender.hasPermission("chestshoprefund.command.debug")) {
-                Lang.sendMessage(commandSender, Lang.COMMAND_NO_PERMISSION);
+                Messages.NO_PERMISSION.sendWithPrefix(commandSender);
                 return true;
             }
             if (ChestShopRefund.debug) {
@@ -70,7 +71,7 @@ public class CommandCsrefund implements TabExecutor {
         if (args[0].equalsIgnoreCase("refund")) {
             // No permission
             if (!commandSender.hasPermission("chestshoprefund.command.refund")) {
-                Lang.sendMessage(commandSender, Lang.COMMAND_NO_PERMISSION);
+                Messages.NO_PERMISSION.sendWithPrefix(commandSender);
                 return true;
             }
 
@@ -83,7 +84,6 @@ public class CommandCsrefund implements TabExecutor {
 
             // Missing transaction hash
             if (args.length == 1) {
-                Lang.debug(player, "Missing transaction hash");
                 Lang.sendMessage(player, Lang.NOT_REFUNDABLE);
                 return true;
             }
@@ -93,7 +93,6 @@ public class CommandCsrefund implements TabExecutor {
             try {
                 transactionHash = Integer.parseInt(args[1]);
             } catch (Exception ex) {
-                Lang.debug(player, "Transaction hash malformed");
                 Lang.sendMessage(player, Lang.NOT_REFUNDABLE);
                 return true;
             }
@@ -101,7 +100,6 @@ public class CommandCsrefund implements TabExecutor {
             // Transaction not found
             TransactionEvent transaction = ChestShopRefund.transactions.get(transactionHash);
             if (transaction == null) {
-                Lang.debug(player, "Transaction not found");
                 Lang.sendMessage(player, Lang.NOT_REFUNDABLE);
                 return true;
             }
@@ -109,7 +107,6 @@ public class CommandCsrefund implements TabExecutor {
             // Player is not the client in this transaction
             UUID client = transaction.getClient().getUniqueId();
             if (!client.equals(player.getUniqueId())) {
-                Lang.debug(player, "Not your transaction");
                 Lang.sendMessage(player, Lang.NOT_REFUNDABLE);
                 return true;
             }
@@ -129,23 +126,20 @@ public class CommandCsrefund implements TabExecutor {
             if (type == TransactionType.BUY) {
                 // Merchant doesn't have enough money
                 if (!hasMoney(merchant, price)) {
-                    Lang.debug(player, "Merchant doesn't have enough money");
-                    Lang.sendMessage(player, Lang.NOT_REFUNDABLE);
+                    Messages.NOT_ENOUGH_MONEY_SHOP.sendWithPrefix(player);
                     return true;
                 }
 
                 // Player doesn't have enough items
                 if (!player.getInventory().containsAtLeast(typeRef, quantity)) {
-                    Lang.debug(player, "You don't have the items in hand");
-                    Lang.sendMessage(player, Lang.NOT_REFUNDABLE);
+                    Messages.NO_ITEM_IN_HAND.sendWithPrefix(player);
                     return true;
                 }
 
                 // Couldn't find container for the transaction
                 Container container = getContainer(location, merchant);
                 if (container == null) {
-                    Lang.debug(player, "Container not found");
-                    Lang.sendMessage(player, Lang.NOT_REFUNDABLE);
+                    Messages.NO_SHOP_FOUND.sendWithPrefix(player);
                     return true;
                 }
 
@@ -154,8 +148,7 @@ public class CommandCsrefund implements TabExecutor {
                 for (ItemStack stack : items) {
                     HashMap<Integer, ItemStack> remainder = snapshot.addItem(stack.clone());
                     if (!remainder.isEmpty()) {
-                        Lang.debug(player, "Container is full");
-                        Lang.sendMessage(player, Lang.NOT_REFUNDABLE);
+                        Messages.NOT_ENOUGH_SPACE_IN_CHEST.sendWithPrefix(player);
                         return true;
                     }
                 }
@@ -194,23 +187,20 @@ public class CommandCsrefund implements TabExecutor {
             if (type == TransactionType.SELL) {
                 // Client doesn't have enough money
                 if (!hasMoney(player.getUniqueId(), price)) {
-                    Lang.debug(player, "You don't have enough money");
-                    Lang.sendMessage(player, Lang.NOT_REFUNDABLE);
+                    Messages.NOT_ENOUGH_MONEY.sendWithPrefix(player);
                     return true;
                 }
 
                 // Couldn't find container for transaction
                 Container container = getContainer(location, merchant);
                 if (container == null) {
-                    Lang.debug(player, "Container not found");
-                    Lang.sendMessage(player, Lang.NOT_REFUNDABLE);
+                    Messages.NO_SHOP_FOUND.sendWithPrefix(player);
                     return true;
                 }
 
                 // Container doesn't have enough stock
                 if (!container.getInventory().containsAtLeast(typeRef, quantity)) {
-                    Lang.debug(player, "Container doesn't have " + quantity + " " + typeRef.getType());
-                    Lang.sendMessage(player, Lang.NOT_REFUNDABLE);
+                    Messages.NOT_ENOUGH_STOCK.sendWithPrefix(player);
                     return true;
                 }
 
@@ -281,7 +271,7 @@ public class CommandCsrefund implements TabExecutor {
         Account signAccount = NameManager.getAccount(ChestShopSign.getOwner(sign));
         Account transAccount = NameManager.getAccount(merchant);
         if (!signAccount.getUuid().equals(transAccount.getUuid())) {
-            Lang.debug(Bukkit.getConsoleSender(), "Acounts don't match");
+            Lang.debug(Bukkit.getConsoleSender(), "Accounts don't match");
             return null;
         }
 
