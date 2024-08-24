@@ -132,7 +132,7 @@ public class CommandCsrefund implements TabExecutor {
 
                 // Player doesn't have enough items
                 if (!player.getInventory().containsAtLeast(typeRef, quantity)) {
-                    Messages.NO_ITEM_IN_HAND.sendWithPrefix(player);
+                    Messages.NOT_ENOUGH_ITEMS_TO_SELL.sendWithPrefix(player);
                     return true;
                 }
 
@@ -258,20 +258,19 @@ public class CommandCsrefund implements TabExecutor {
      */
     @Nullable
     public Container getContainer(Location location, UUID merchant) {
-        if (!location.isChunkLoaded()) {
-            location.getChunk().load(false);
-        }
+        location.getChunk().load(false);
+
         Block block = location.getWorld().getBlockAt(location.getBlockX(), location.getBlockY(), location.getBlockZ());
         BlockState state = block.getState();
         if (!(state instanceof Sign)) {
-            Lang.debug(Bukkit.getConsoleSender(), "Not a sign");
+            Lang.debug("Not a sign");
             return null;
         }
         Sign sign = (Sign) state;
         Account signAccount = NameManager.getAccount(ChestShopSign.getOwner(sign));
         Account transAccount = NameManager.getAccount(merchant);
         if (!signAccount.getUuid().equals(transAccount.getUuid())) {
-            Lang.debug(Bukkit.getConsoleSender(), "Accounts don't match");
+            Lang.debug("Accounts don't match");
             return null;
         }
 

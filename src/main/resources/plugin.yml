@@ -1,7 +1,7 @@
 name: ChestShopRefund
 version: '${project.version}'
 main: com.birdflop.chestshoprefund.ChestShopRefund
-api-version: '1.18'
+api-version: '1.16'
 depend:
   - ChestShop
 softdepend:

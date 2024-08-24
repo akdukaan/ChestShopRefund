@@ -1,6 +1,5 @@
 package com.birdflop.chestshoprefund;
 
-import com.Acrobot.ChestShop.Configuration.Messages;
 import com.google.common.base.Throwables;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
@@ -8,6 +7,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
@@ -79,15 +79,18 @@ public class Lang {
      * @param message   Message to send
      */
     public static void sendMessage(@NotNull CommandSender recipient, String message) {
-        Component component = MiniMessage.miniMessage().deserialize(message);
-        recipient.sendMessage(component);
-        Messages.
+        if (recipient instanceof Player) {
+            Component component = MiniMessage.miniMessage().deserialize(message);
+            Player player = (Player) recipient;
+            ChestShopRefund.adventure.player(player).sendMessage(component);
+        } else {
+            recipient.sendMessage(message);
+        }
     }
 
-    public static void debug(@NotNull CommandSender recipient, String message) {
+    public static void debug(String message) {
         if (ChestShopRefund.debug) {
-            Component component = MiniMessage.miniMessage().deserialize(message);
-            recipient.sendMessage(component);
+            ChestShopRefund.plugin.getLogger().log(Level.INFO, message);
         }
     }
 }

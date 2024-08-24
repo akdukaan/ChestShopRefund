@@ -4,6 +4,7 @@ import com.Acrobot.ChestShop.ChestShop;
 import com.Acrobot.ChestShop.Events.TransactionEvent;
 import com.google.common.collect.ImmutableMap;
 import com.wfector.notifier.ChestShopNotifier;
+import net.kyori.adventure.platform.bukkit.BukkitAudiences;
 import org.bstats.bukkit.Metrics;
 import org.bstats.charts.DrilldownPie;
 import org.bukkit.Bukkit;
@@ -19,11 +20,13 @@ public final class ChestShopRefund extends JavaPlugin {
     public static ChestShopNotifier csn = null;
     public static HashMap<Integer, TransactionEvent> transactions = new HashMap<>();
     public static boolean debug = false;
+    public static BukkitAudiences adventure = null;
 
 
     @Override
     public void onEnable() {
         plugin = this;
+        adventure = BukkitAudiences.create(this);
         Plugin chestShopNotifier = Bukkit.getPluginManager().getPlugin("ChestShopNotifier");
         if (chestShopNotifier instanceof ChestShopNotifier) {
             try {
