@@ -1,6 +1,8 @@
 package com.birdflop.chestshoprefund;
 
+import com.Acrobot.Breeze.Configuration.Configuration;
 import com.Acrobot.ChestShop.Configuration.Messages;
+import com.Acrobot.ChestShop.Configuration.Properties;
 import com.Acrobot.ChestShop.Database.Account;
 import com.Acrobot.ChestShop.Events.TransactionEvent;
 import com.Acrobot.ChestShop.Events.TransactionEvent.TransactionType;
@@ -16,6 +18,7 @@ import net.milkbowl.vault.economy.Economy;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
+import org.bukkit.World;
 import org.bukkit.block.*;
 import org.bukkit.block.data.BlockData;
 import org.bukkit.block.data.type.WallSign;
@@ -115,6 +118,7 @@ public class CommandCsrefund implements TabExecutor {
             TransactionType type = transaction.getTransactionType();
             Account merchantAccount = transaction.getOwnerAccount();
             UUID merchant = merchantAccount.getUuid();
+            boolean adminShop = NameManager.isAdminShop(merchant);
             ItemStack[] items = transaction.getStock();
             ItemStack typeRef = items[0];
             int quantity = 0;
@@ -136,20 +140,29 @@ public class CommandCsrefund implements TabExecutor {
                     return true;
                 }
 
-                // Couldn't find container for the transaction
-                Container container = getContainer(location, merchant);
-                if (container == null) {
+                // Couldn't find sign for the transaction
+                Sign sign = getSign(location, merchant);
+                if (sign == null) {
+                    Messages.NO_SHOP_FOUND.sendWithPrefix(player);
+                    return true;
+                }
+
+                // Couldn't find container for the sign
+                Container container = getContainer(sign);
+                if (container == null && !adminShop) {
                     Messages.NO_SHOP_FOUND.sendWithPrefix(player);
                     return true;
                 }
 
                 // Container is full
-                Inventory snapshot = container.getSnapshotInventory();
-                for (ItemStack stack : items) {
-                    HashMap<Integer, ItemStack> remainder = snapshot.addItem(stack.clone());
-                    if (!remainder.isEmpty()) {
-                        Messages.NOT_ENOUGH_SPACE_IN_CHEST.sendWithPrefix(player);
-                        return true;
+                if (container != null) {
+                    Inventory snapshot = container.getSnapshotInventory();
+                    for (ItemStack stack : items) {
+                        HashMap<Integer, ItemStack> remainder = snapshot.addItem(stack.clone());
+                        if (!remainder.isEmpty()) {
+                            Messages.NOT_ENOUGH_SPACE_IN_CHEST.sendWithPrefix(player);
+                            return true;
+                        }
                     }
                 }
 
@@ -157,8 +170,10 @@ public class CommandCsrefund implements TabExecutor {
                 for (ItemStack stack : items) {
                     player.getInventory().removeItem(stack.clone());
                 }
-                for (ItemStack stack : items) {
-                    container.getInventory().addItem(stack.clone());
+                if (container != null) {
+                    for (ItemStack stack : items) {
+                        container.getInventory().addItem(stack.clone());
+                    }
                 }
                 takeMoney(merchant, price);
                 giveMoney(player.getUniqueId(), price);
@@ -192,21 +207,31 @@ public class CommandCsrefund implements TabExecutor {
                 }
 
                 // Couldn't find container for transaction
-                Container container = getContainer(location, merchant);
-                if (container == null) {
+                Sign sign = getSign(location, merchant);
+                if (sign == null) {
+                    Messages.NO_SHOP_FOUND.sendWithPrefix(player);
+                    return true;
+                }
+
+                Container container = getContainer(sign);
+                if (container == null && !adminShop) {
                     Messages.NO_SHOP_FOUND.sendWithPrefix(player);
                     return true;
                 }
 
                 // Container doesn't have enough stock
-                if (!container.getInventory().containsAtLeast(typeRef, quantity)) {
-                    Messages.NOT_ENOUGH_STOCK.sendWithPrefix(player);
-                    return true;
+                if (container != null) {
+                    if (!container.getInventory().containsAtLeast(typeRef, quantity)) {
+                        Messages.NOT_ENOUGH_STOCK.sendWithPrefix(player);
+                        return true;
+                    }
                 }
 
                 // Reverse transaction
-                for (ItemStack stack : items) {
-                    container.getInventory().removeItem(stack.clone());
+                if (container != null) {
+                    for (ItemStack stack : items) {
+                        container.getInventory().removeItem(stack.clone());
+                    }
                 }
                 for (ItemStack stack : items) {
                     HashMap<Integer, ItemStack> remainder = player.getInventory().addItem(stack.clone());
@@ -254,13 +279,17 @@ public class CommandCsrefund implements TabExecutor {
     /**
      * @param location get the container that has a shop sign at this location
      * @param merchant verify that the shop is owned by them
-     * @return The container of the shop block
+     * @return The sign at the location
      */
     @Nullable
-    public Container getContainer(Location location, UUID merchant) {
+    public Sign getSign(Location location, UUID merchant) {
         location.getChunk().load(false);
-
-        Block block = location.getWorld().getBlockAt(location.getBlockX(), location.getBlockY(), location.getBlockZ());
+        World world = location.getWorld();
+        if (world == null) {
+            Lang.debug("World not found");
+            return null;
+        }
+        Block block = world.getBlockAt(location.getBlockX(), location.getBlockY(), location.getBlockZ());
         BlockState state = block.getState();
         if (!(state instanceof Sign)) {
             Lang.debug("Not a sign");
@@ -273,9 +302,18 @@ public class CommandCsrefund implements TabExecutor {
             Lang.debug("Accounts don't match");
             return null;
         }
+        return sign;
+    }
 
+    /**
+     * @param sign shop sign at the location
+     * @return The container attached to the sign
+     */
+    @Nullable
+    public Container getContainer(Sign sign) {
         loadConnectedContainer(sign);
-        return uBlock.findConnectedContainer(block);
+        if (ChestShopSign.isAdminShop(sign) && Properties.FORCE_UNLIMITED_ADMIN_SHOP) return null;
+        return uBlock.findConnectedContainer(sign.getBlock());
     }
 
     /**
@@ -334,12 +372,14 @@ public class CommandCsrefund implements TabExecutor {
     public static void giveMoney(UUID uuid, BigDecimal amount) {
         Economy econ = getEconomy();
         if (econ == null) return;
+        if (NameManager.isAdminShop(uuid)) return;
         econ.depositPlayer(Bukkit.getOfflinePlayer(uuid), amount.doubleValue());
     }
 
     public static void takeMoney(UUID uuid, BigDecimal amount) {
         Economy econ = getEconomy();
         if (econ == null) return;
+        if (NameManager.isAdminShop(uuid)) return;
         OfflinePlayer player = Bukkit.getOfflinePlayer(uuid);
         econ.withdrawPlayer(player, amount.doubleValue());
     }
@@ -347,6 +387,7 @@ public class CommandCsrefund implements TabExecutor {
     public static boolean hasMoney(UUID uuid, BigDecimal amount) {
         Economy econ = getEconomy();
         if (econ == null) return false;
+        if (NameManager.isAdminShop(uuid)) return true;
         OfflinePlayer player = Bukkit.getOfflinePlayer(uuid);
         return econ.getBalance(player) >= amount.doubleValue();
     }
