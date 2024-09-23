@@ -1,6 +1,7 @@
 package com.birdflop.chestshoprefund;
 
 import com.Acrobot.Breeze.Configuration.Configuration;
+import com.Acrobot.ChestShop.Commands.Toggle;
 import com.Acrobot.ChestShop.Configuration.Messages;
 import com.Acrobot.ChestShop.Configuration.Properties;
 import com.Acrobot.ChestShop.Database.Account;
@@ -188,11 +189,13 @@ public class CommandCsrefund implements TabExecutor {
                 Lang.sendMessage(player, message);
                 if (transaction.getOwner().isOnline()) {
                     Player owner = (Player) transaction.getOwner();
-                    String ownerMessage = Lang.SOMEONE_UNBOUGHT
-                            .replace("{player}", player.getName())
-                            .replace("{price}", com.Acrobot.ChestShop.Economy.Economy.formatBalance(price))
-                            .replace("{item}", ItemUtil.getItemList(items));
-                    Lang.sendMessage(owner, ownerMessage);
+                    if (!Toggle.isIgnoring(owner.getUniqueId())) {
+                        String ownerMessage = Lang.SOMEONE_UNBOUGHT
+                                .replace("{player}", player.getName())
+                                .replace("{price}", com.Acrobot.ChestShop.Economy.Economy.formatBalance(price))
+                                .replace("{item}", ItemUtil.getItemList(items));
+                        Lang.sendMessage(owner, ownerMessage);
+                    }
                 }
 
                 logToNotifier(merchant, player, typeRef, price, type, quantity);
@@ -256,11 +259,13 @@ public class CommandCsrefund implements TabExecutor {
                 Lang.sendMessage(player, message);
                 if (transaction.getOwner().isOnline()) {
                     Player owner = (Player) transaction.getOwner();
-                    String ownerMessage = Lang.SOMEONE_UNSOLD
-                            .replace("{player}", player.getName())
-                            .replace("{price}", com.Acrobot.ChestShop.Economy.Economy.formatBalance(price))
-                            .replace("{item}", ItemUtil.getItemList(items));
-                    Lang.sendMessage(owner, ownerMessage);
+                    if (!Toggle.isIgnoring(owner.getUniqueId())) {
+                        String ownerMessage = Lang.SOMEONE_UNSOLD
+                                .replace("{player}", player.getName())
+                                .replace("{price}", com.Acrobot.ChestShop.Economy.Economy.formatBalance(price))
+                                .replace("{item}", ItemUtil.getItemList(items));
+                        Lang.sendMessage(owner, ownerMessage);
+                    }
                 }
 
                 // Log to CSNotifier
