@@ -39,6 +39,7 @@ public final class ChestShopRefund extends JavaPlugin {
         }
         getServer().getPluginManager().registerEvents(new ListenerTransaction(), this);
         getCommand("csrefund").setExecutor(new CommandCsrefund());
+        Lang.reload();
 
         try {
             addCustomMetrics();
