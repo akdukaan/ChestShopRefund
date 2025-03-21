@@ -5,6 +5,7 @@ import com.Acrobot.ChestShop.Commands.Toggle;
 import com.Acrobot.ChestShop.Configuration.Messages;
 import com.Acrobot.ChestShop.Configuration.Properties;
 import com.Acrobot.ChestShop.Database.Account;
+import com.Acrobot.ChestShop.Events.AccountQueryEvent;
 import com.Acrobot.ChestShop.Events.TransactionEvent;
 import com.Acrobot.ChestShop.Events.TransactionEvent.TransactionType;
 import com.Acrobot.ChestShop.Signs.ChestShopSign;
@@ -301,9 +302,16 @@ public class CommandCsrefund implements TabExecutor {
             return null;
         }
         Sign sign = (Sign) state;
-        Account signAccount = NameManager.getAccount(ChestShopSign.getOwner(sign));
-        Account transAccount = NameManager.getAccount(merchant);
-        if (!signAccount.getUuid().equals(transAccount.getUuid())) {
+        String signOwner = ChestShopSign.getOwner(sign);
+        AccountQueryEvent query = new AccountQueryEvent(signOwner);
+        Bukkit.getPluginManager().callEvent(query);
+        Account signAccount = query.getAccount();
+        if (signAccount == null) {
+            Lang.debug("Sign account doesn't exist");
+            return null;
+        }
+        Account merchAccount = NameManager.getAccount(merchant);
+        if (!signAccount.getUuid().equals(merchAccount.getUuid())) {
             Lang.debug("Accounts don't match");
             return null;
         }
